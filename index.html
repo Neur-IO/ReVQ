@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Quantize-then-Rectify: Efficient VQ-VAE Training.">
+  <meta name="keywords" content="ReVQ, VQ-VAE">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quantize-then-Rectify: Efficient VQ-VAE Training</title>
+  <style type="text/css">svg:not(:root).svg-inline--fa{overflow:visible}.svg-inline--fa{display:inline-block;font-size:inherit;height:1em;overflow:visible;vertical-align:-.125em}.svg-inline--fa.fa-lg{vertical-align:-.225em}.svg-inline--fa.fa-w-1{width:.0625em}.svg-inline--fa.fa-w-2{width:.125em}.svg-inline--fa.fa-w-3{width:.1875em}.svg-inline--fa.fa-w-4{width:.25em}.svg-inline--fa.fa-w-5{width:.3125em}.svg-inline--fa.fa-w-6{width:.375em}.svg-inline--fa.fa-w-7{width:.4375em}.svg-inline--fa.fa-w-8{width:.5em}.svg-inline--fa.fa-w-9{width:.5625em}.svg-inline--fa.fa-w-10{width:.625em}.svg-inline--fa.fa-w-11{width:.6875em}.svg-inline--fa.fa-w-12{width:.75em}.svg-inline--fa.fa-w-13{width:.8125em}.svg-inline--fa.fa-w-14{width:.875em}.svg-inline--fa.fa-w-15{width:.9375em}.svg-inline--fa.fa-w-16{width:1em}.svg-inline--fa.fa-w-17{width:1.0625em}.svg-inline--fa.fa-w-18{width:1.125em}.svg-inline--fa.fa-w-19{width:1.1875em}.svg-inline--fa.fa-w-20{width:1.25em}.svg-inline--fa.fa-pull-left{margin-right:.3em;width:auto}.svg-inline--fa.fa-pull-right{margin-left:.3em;width:auto}.svg-inline--fa.fa-border{height:1.5em}.svg-inline--fa.fa-li{width:2em}.svg-inline--fa.fa-fw{width:1.25em}.fa-layers svg.svg-inline--fa{bottom:0;left:0;margin:auto;position:absolute;right:0;top:0}.fa-layers{display:inline-block;height:1em;position:relative;text-align:center;vertical-align:-.125em;width:1em}.fa-layers svg.svg-inline--fa{-webkit-transform-origin:center center;transform-origin:center center}.fa-layers-counter,.fa-layers-text{display:inline-block;position:absolute;text-align:center}.fa-layers-text{left:50%;top:50%;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);-webkit-transform-origin:center center;transform-origin:center center}.fa-layers-counter{background-color:#ff253a;border-radius:1em;-webkit-box-sizing:border-box;box-sizing:border-box;color:#fff;height:1.5em;line-height:1;max-width:5em;min-width:1.5em;overflow:hidden;padding:.25em;right:0;text-overflow:ellipsis;top:0;-webkit-transform:scale(.25);transform:scale(.25);-webkit-transform-origin:top right;transform-origin:top right}.fa-layers-bottom-right{bottom:0;right:0;top:auto;-webkit-transform:scale(.25);transform:scale(.25);-webkit-transform-origin:bottom right;transform-origin:bottom right}.fa-layers-bottom-left{bottom:0;left:0;right:auto;top:auto;-webkit-transform:scale(.25);transform:scale(.25);-webkit-transform-origin:bottom left;transform-origin:bottom left}.fa-layers-top-right{right:0;top:0;-webkit-transform:scale(.25);transform:scale(.25);-webkit-transform-origin:top right;transform-origin:top right}.fa-layers-top-left{left:0;right:auto;top:0;-webkit-transform:scale(.25);transform:scale(.25);-webkit-transform-origin:top left;transform-origin:top left}.fa-lg{font-size:1.3333333333em;line-height:.75em;vertical-align:-.0667em}.fa-xs{font-size:.75em}.fa-sm{font-size:.875em}.fa-1x{font-size:1em}.fa-2x{font-size:2em}.fa-3x{font-size:3em}.fa-4x{font-size:4em}.fa-5x{font-size:5em}.fa-6x{font-size:6em}.fa-7x{font-size:7em}.fa-8x{font-size:8em}.fa-9x{font-size:9em}.fa-10x{font-size:10em}.fa-fw{text-align:center;width:1.25em}.fa-ul{list-style-type:none;margin-left:2.5em;padding-left:0}.fa-ul>li{position:relative}.fa-li{left:-2em;position:absolute;text-align:center;width:2em;line-height:inherit}.fa-border{border:solid .08em #eee;border-radius:.1em;padding:.2em .25em .15em}.fa-pull-left{float:left}.fa-pull-right{float:right}.fa.fa-pull-left,.fab.fa-pull-left,.fal.fa-pull-left,.far.fa-pull-left,.fas.fa-pull-left{margin-right:.3em}.fa.fa-pull-right,.fab.fa-pull-right,.fal.fa-pull-right,.far.fa-pull-right,.fas.fa-pull-right{margin-left:.3em}.fa-spin{-webkit-animation:fa-spin 2s infinite linear;animation:fa-spin 2s infinite linear}.fa-pulse{-webkit-animation:fa-spin 1s infinite steps(8);animation:fa-spin 1s infinite steps(8)}@-webkit-keyframes fa-spin{0%{-webkit-transform:rotate(0);transform:rotate(0)}100%{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}@keyframes fa-spin{0%{-webkit-transform:rotate(0);transform:rotate(0)}100%{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}.fa-rotate-90{-webkit-transform:rotate(90deg);transform:rotate(90deg)}.fa-rotate-180{-webkit-transform:rotate(180deg);transform:rotate(180deg)}.fa-rotate-270{-webkit-transform:rotate(270deg);transform:rotate(270deg)}.fa-flip-horizontal{-webkit-transform:scale(-1,1);transform:scale(-1,1)}.fa-flip-vertical{-webkit-transform:scale(1,-1);transform:scale(1,-1)}.fa-flip-both,.fa-flip-horizontal.fa-flip-vertical{-webkit-transform:scale(-1,-1);transform:scale(-1,-1)}:root .fa-flip-both,:root .fa-flip-horizontal,:root .fa-flip-vertical,:root .fa-rotate-180,:root .fa-rotate-270,:root .fa-rotate-90{-webkit-filter:none;filter:none}.fa-stack{display:inline-block;height:2em;position:relative;width:2.5em}.fa-stack-1x,.fa-stack-2x{bottom:0;left:0;margin:auto;position:absolute;right:0;top:0}.svg-inline--fa.fa-stack-1x{height:1em;width:1.25em}.svg-inline--fa.fa-stack-2x{height:2em;width:2.5em}.fa-inverse{color:#fff}.sr-only{border:0;clip:rect(0,0,0,0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.sr-only-focusable:active,.sr-only-focusable:focus{clip:auto;height:auto;margin:0;overflow:visible;position:static;width:auto}.svg-inline--fa .fa-primary{fill:var(--fa-primary-color,currentColor);opacity:1;opacity:var(--fa-primary-opacity,1)}.svg-inline--fa .fa-secondary{fill:var(--fa-secondary-color,currentColor);opacity:.4;opacity:var(--fa-secondary-opacity,.4)}.svg-inline--fa.fa-swap-opacity .fa-primary{opacity:.4;opacity:var(--fa-secondary-opacity,.4)}.svg-inline--fa.fa-swap-opacity .fa-secondary{opacity:1;opacity:var(--fa-primary-opacity,1)}.svg-inline--fa mask .fa-primary,.svg-inline--fa mask .fa-secondary{fill:#000}.fad.fa-inverse{color:#fff}</style>  
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Quantize-then-Rectify: Efficient VQ-VAE Training</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://boruizhang.site">Borui Zhang*</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="https://github.com/Andyourao">Qihang Rao*</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="https://wzzheng.net/">WenZhao Zheng</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en&authuser=1">Jie Zhou</a><sup>1</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://ivg.au.tsinghua.edu.cn/Jiwen_Lu/">Jiwen Lu</a><sup>1</sup>
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Tsinghua University</span>
+            <span class="author-block"><sup>2</sup>University of Califorinia, Berkeley</span>
+          </div>
+          (* indicates equal contribution)
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <!-- <span class="link-block">
+                <a href="https://arxiv.org/abs/2212.09062"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span> -->
+              <!-- Code. -->
+              <span class="link-block">
+                <a href="https://github.com/Neur-IO/ReVQ" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <svg class="svg-inline--fa fa-github fa-w-16" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="github" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512" data-fa-i2svg=""><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg><!-- <i class="fab fa-github"></i> Font Awesome fontawesome.com -->
+                  </span>
+                  <span>Code</span>
+                </a>
+              </span>
+              <!-- HF demo. -->
+              <span class="link-block">
+                <a href="https://huggingface.co/spaces/AndyRaoTHU/ReVQ"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span>HF Demo</span>
+                </a>
+              </span>
+              <!-- 中文解读. -->
+              <span class="link-block">
+                <a href="https://zhuanlan.zhihu.com/p/1910111424765728444"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span>中文解读</span>
+                </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <!-- Head Figure. -->
+    <div class="hero-body">
+      <img width = "100%" src="./static/revq/head_00.png" alt="head figure">
+      <h2 class="subtitle has-text-centered">
+      Comparison between different VQ methods.
+      </h2>
+    </div>
+    <!-- Head Figure. -->
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Visual tokenizers are pivotal in multimodal large models, acting as bridges between continuous inputs and discrete token. 
+            Nevertheless, training high-compression-rate VQ-VAEs remains computationally demanding, 
+            often necessitating thousands of GPU hours. 
+            This work demonstrates that a pre-trained VAE can be efficiently transformed into a VQ-VAE by controlling quantization noise within the VAE's tolerance threshold. 
+            We present <b style="color:red">Quantize-then-Rectify (ReVQ)</b>, 
+            a framework leveraging pre-trained VAEs to enable rapid VQ-VAE training with minimal computational overhead. 
+            By integrating <b style="color:red">channel multi-group quantization</b> to enlarge codebook capacity and a <b style="color:red">post rectifier</b> to mitigate quantization errors, 
+            ReVQ compresses ImageNet images into at most \(512\) tokens while sustaining competitive reconstruction quality (rFID = \(1.06\)). 
+            Significantly, ReVQ reduces training costs by over two orders of magnitude relative to state-of-the-art approaches: 
+            ReVQ finishes full training on a single NVIDIA 4090 in approximately 22 hours, 
+            whereas comparable methods require 4.5 days on a 32 A100 GPUs. 
+            Experimental results show that ReVQ achieves superior efficiency-reconstruction trade-offs.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Introduction. -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">1. Introduction</h2>
+        <!-- <h3 class="title is-4">Interpolating states</h3> -->
+        <div class="content has-text-justified">
+          <p>
+            Large language models have revolutionized artificial intelligence by utilizing discrete token sequences for next-token prediction. 
+            For integrating vision with LLMs, 
+            visual tokenizers play a critical role in bridging continuous image spaces and discrete input formats of LLMs. 
+            VQ-VAEs serve as foundational components for this integration by discretizing image latent spaces, 
+            enabling alignment between visual and linguistic modalities in vision-LLM architectures.
+            Despite advancements in reconstruction quality, modern VQ-VAEs face a fundamental challenge: 
+            a trade-off between <b>training efficiency</b> and <b>compression ratio</b>. 
+            Current approaches can be categorized into two distinct categories. 
+            (1) <b>high-compression but high-cost methods</b> (e.g., MaskBit, \(\leq 256\) tokens) demand substantial computational resources, requiring over \(3,000\) GPU hours on A100 clusters. 
+            This limits accessibility to well-resourced institutions. 
+            (2) <b>efficient but low-compression methods</b> (e.g., TokenBridge, 4096 tokens; CODA, 2560 tokens) leverage pre-trained VAEs for rapid quantization but fail to achieve the short token lengths necessary for downstream generative tasks.
+          </p>
+          <p>
+            This work addresses the unmet need for a VQ-VAE framework that concurrently achieves high compression ratios and efficient training. 
+            We uncover an inherent relationship between VAEs and VQ-VAEs: under specific conditions, 
+            a pre-trained VAE can be systematically transformed into a VQ-VAE with minimal computational overhead. 
+            Unlike previous attempts such as TokenBridge and CODA, which compromise on token length, 
+            our <b style="color:red">ReVQ</b> framework leverages pre-trained VAEs to facilitate fast VQ-VAE training while maintaining high compression performance. 
+            By integrating <b>channel multi-group quantization</b> to expand codebook capacity and a <b>post rectifier</b> to alleviate quantization errors, 
+            ReVQ compresses ImageNet images into at most \(512\) tokens while sustaining competitive reconstruction quality (rFID = \(1.06\)). 
+            ReVQ completes full training on a single NVIDIA 4090 in approximately \(22\) hours, 
+            in contrast to comparable methods that require \(4.5\) days on a \(32\) A100 GPUs. 
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Introduction. -->
+
+    <!-- Method. -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">2. Method</h2>
+        <h3 class="title is-4">2.1. Channel Multi-Group Quantization</h3>
+        <div class="content has-text-centered">
+          <img width="60%" src="./static/revq/1.png" class="content-image" alt="exp-1">
+          <h4 class="subtitle has-text-centered", style="font-weight: normal;">
+          Comparison of different quantization strategies.
+          </h4>
+        </div>
+        <div class="content has-text-justified">
+          <p>
+            Multi-group strategies introduce \(B\) independent codebooks \( \mathcal{C}_i \), quantizing as 
+            \begin{align}
+                z_q^i = q(z_e^i, \mathcal{C}_i), ~i=1,\cdots,B.
+            \end{align}
+            If divided by spacial axis, then \(B=S\).
+            This increases effective degrees of freedom to \(N \times B\), mitigating training difficulties. 
+            However, our research finds spatial splitting suboptimal for visual data.
+            This reveals highly correlated \(z_e^i\) distributions under spatial splitting, versus relatively independent distributions under channel splitting. 
+            To fully utilize the flexibility of multi-group strategy, we propose a <b>channel multi-group</b> strategy: define \(z_e^i = [Z'_e]_{(i,\cdot)}\) and apply multi-group quantization. 
+            When token length \(B\) differs from feature dimension \(D\), 
+            we perform secondary spatial spliting after initial channel-wise division, 
+            resulting in feature vectors of dimension \(d = (H \times W \times D)/B\).
+            The picture above shows kernel density statistics via linear dimensionality reduction on feature maps partitioned by spatial vs. channel dimensions.
+          </p>
+        </div>
+
+        <h3 class="title is-4">2.2. Non-Activation Reset Strategy
+        </h3>
+        <div class="content has-text-justified">
+          <p>
+            we propose the <b>Non-Activation Reset</b> strategy. 
+            Specifically, during each training epoch, for the codebook \( \mathcal{C} \), we count the activation time \( t_i \) of each code \( c_i \). 
+            At the end of the epoch, we sort the indices of the \( N \) codes in ascending order of their \( t_i \) values, obtaining \( I = \{i_1, i_2, \cdots, i_N\} \). 
+            When there are \( r \) unactivated codes (i.e., the first \( r \) indices in \( I \) have \( t_i = 0 \)), we perform the following reset operation:
+            \begin{align} \label{equ:reset}
+                c_{i_u} \leftarrow c_{i_{N + 1 - u}} + \epsilon, ~ u=1, \cdots, r,
+            \end{align}
+            where \( \epsilon \) is a small random perturbation to avoid overlapping between codes after reset. 
+            This operation intuitively resets unactivated points to the vicinity of highly activated codes, 
+            sharing the burden of frequently activated codes and promoting a more uniform activation frequency across codes.
+                      
+            We find that methods balancing codebook activation frequencies effectively prevent codebook collapse.
+            Our reset strategy requires no additional loss functions or computational steps during training.
+            Only a single reset operation at the end of each epoch, making it a plug-and-play module in code implementation.
+          </p>
+        </div>
+        <h3 class="title is-4">2.3. ReVQ: Quantize-then-Rectify</h3>
+        <div class="content has-text-justified">
+          <p>
+            we introduce the <b>Quantize-then-Rectify (ReVQ)</b> framework in this section.
+            The proposed method posits that for the quantized features \( Z_q \) from quantizer \(q\), a rectifier \(g\) should be constructed. 
+            The reconstructed quantized features via the ReVQ method are thus given by:
+            \begin{align} \label{equ:revq}
+                Z_e' = g\left(q(Z_e, \mathcal{C})\right).
+            \end{align}
+          </p>
+          <p>
+            <b>Rectifier Design.</b>
+            DC-AE is a highly practical study that proposes a high-compression VAE architecture capable of compressing images into \(2048D\) vectors. 
+            This model employs a specially designed residual structure for image reconstruction and incorporates EfficientViT blocks in deeper stages. 
+            In our ReVQ framework, since we do not involve upsampling/downsampling of latent variables, 
+            we directly utilize an EfficientViT block as the rectifier model \(g\), which maintains consistent input and output dimensions.
+          </p>
+          <p>
+            <b>Training Loss.</b>
+            Conventional VQ-VAE training typically involves a combination of loss functions, 
+            such as perceptual loss, Patch GAN loss, and standard \(l_2\)/ \(l_1\) losses. 
+            In our ReVQ framework, however, to avoid heavy computational loads, we treat the VAE as a black box without computing its gradients. 
+            Consequently, we only apply \(l_2\) loss in the latent space of \(Z_e\) for training. 
+            The final optimization objective is:
+            \begin{align} \label{equ:loss}
+                \min_{\theta_g, \mathcal{C}} L_{\text{ReVQ}} = \left\Vert Z_e - g\left(q(Z_e)\right) \right\Vert^2_2,
+            \end{align}
+            where \(\theta_g\) denotes the parameters of the rectifier model and \(\mathcal{C}\) represents all codebook parameters.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Method. -->
+
+    <!-- Experiment. -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+
+        <h2 class="title is-3">3. Experiment</h2>
+
+        <h3 class="title is-4">3.1. Image Reconstruction</h3>
+        <h3 class="title is-4">Quantitative Comparison</h3>
+        <div class="content has-text-justified">
+        <div class="content has-text-centered">
+          <img width="60%" src="./static/revq/2.png" class="content-image" alt="exp-1">
+          <h4 class="subtitle has-text-centered", style="font-weight: normal;">
+          Quantitative comparison with state-of-the-art methods on ImageNet.
+          </h4>
+        </div>
+        <div class="content has-text-centered">
+          <img width="60%" src="./static/revq/3.png" class="content-image" alt="exp-1">
+        </div>
+          <p>
+            We conduct a comparative analysis of our ReVQ model against leading VQ-VAEs on ImageNet.
+            Evaluations are conducted on the validation, employing four standard metrics: PSNR, SSIM, LPIPS, and rFID.
+            Two salient observations emerge from our results. 
+            First, the model with a token length of 512 demonstrates superior performance across all metrics, surpassing both "Fine Tuning" and "Frozen" counterparts. 
+            Additionally, the configuration with a token length of 256 and a codebook size of 262144 achieves notable outcomes, 
+            surpassing all other 256 token length models except MaskBit.
+            Second, our model exhibits a significant advantage in training efficiency. 
+            Compared with publicly available training durations of existing approaches, 
+            ReVQ reduces the total GPU hours by \(40\times \sim 150\times\).
+          </p>
+        </div>
+        <h3 class="title is-4">Qualitative Comparison</h3>
+        <div class="content has-text-justified">
+        <div class="content has-text-centered">
+          <img width="60%" src="./static/revq/rec_00.png" class="content-image" alt="exp-1">
+          <h4 class="subtitle has-text-centered", style="font-weight: normal;">
+          Reconstruction results on ImageNet validation set (details marked in red boxes).
+          </h4>
+        </div>
+          <p>
+            We also compare the reconstruction quality of ReVQ with other VQ-VAEs.
+            The red-boxed regions highlight ReVQ’s superior ability to preserve fine-grained details, 
+            particularly in areas involving complex textures and facial features.
+          </p>
+        </div>
+
+        <h3 class="title is-4">3.2. Ablation Study</h3>
+        <h3 class="title is-4">Channel Multi-Group Strategy</h3>
+        <div class="content has-text-centered">
+          <img width="90%" src="./static/revq/4.png" class="content-image" alt="exp-2">
+        </div>
+        <div class="content has-text-justified">
+        <p>
+          Fig. 6 demonstrates the superiority of the multi-group strategy over the single-group strategy in quantization. 
+          We randomly initialized several 2D data points, with each data point represented by 2 tokens. 
+          For the single-group strategy, due to its inherent symmetry constraint, the reconstructed data points are forced to be symmetric about the line \(y = x\), leading to a quantization error of \(0.7\). 
+          In contrast, the multi-group strategy, with its higher degree of freedom, can better adapt to the true data distribution, achieving a minimum quantization error of \(0.2\).  
+          We also quantitatively compared the performance of space-based and channel-based spliting. 
+          As shown in Table 4, the rFID values of spliting along space and channel are presented respectively. 
+          It can be observed that under both 512-token and 256-token lengths, spliting along channel consistently outperforms space.
+        </p>
+        </div>
+
+        <h3 class="title is-4">Non-Activation Reset Strategy</h3>
+        <div class="content has-text-justified">
+          <p>
+            We first visualize the dynamic process of codebook changes under this strategy in Fig. 7. 
+            We randomly initialized several 2D data points, each represented by 1 token. 
+            Without the reset strategy, the codebook is heavily influenced by the initialization, resulting in only a few codes being used (e.g., only 2 codes in this case) and a quantization error of \(2.8\). 
+            With the Reset strategy, inactive codes are reset to data-dense regions during training, as shown by the orange dashed arrows in the figure. 
+            This ensures all codes are used, reducing the quantization error to \(0.4\). 
+            To more thoroughly demonstrate the effectiveness of this strategy, we conducted quantitative experiments on 10% of the ImageNet dataset, as shown in Fig. 8. 
+            The results show that without the reset strategy, codebook utilization decreases rapidly as the codebook size increases, with only 65.3% of the codes utilized. 
+            In contrast, with the reset strategy, codebook utilization remains above 97% without significant decline as the codebook size increases.
+          </p>
+        </div>
+
+        <h3 class="title is-4">Effectiveness of Rectification</h3>
+        <div class="content has-text-centered">
+          <img width="90%" src="./static/revq/5.png" class="content-image" alt="exp-3">
+        </div>
+        <div class="content has-text-justified">
+          <p>
+            We initiate our analysis by evaluating the impact of the rectifier module on model performance in Fig. 9.
+            We conduct training on the ImageNet dataset using different token lengths and their corresponding codebook sizes,
+            with consistent training strategies and an identical rectifier design.
+            The use of the rectifier consistently reduces reconstruction loss across all token lengths. 
+            Notably, the improvement is more pronounced when the baseline model is weaker. 
+          </p>
+        </div>
+
+        <h3 class="title is-4">Diverse Rectifier Architectures</h3>
+        <div class="content has-text-justified">
+          <p>
+            We further examine how different architectural designs of the rectifier affect model performance.
+            In particular, we investigate three rectifier designs employing ViT, CNN, and MLP backbones.
+            All other training settings are kept identical.
+            Empirical evidence indicates that the ViT rectifier consistently surpasses its CNN and MLP counterparts across both configurations.
+          </p>
+
+          <p>
+            Additionally, conventional VQ-VAEs adopt symmetrical architectural designs. 
+            A natural question arises: why not use an additional encoder before the quantizer? 
+            In Table 6, we explored adding an encoder matching the rectifier's architecture before the quantizer to improve reconstruction performance. 
+            We found this greatly increased training difficulty, causing a significant rise in rFID. 
+            Thus, we ultimately chose not to add an extra encoder before the quantizer.
+          </p>
+        </div>
+
+      </div>
+    </div>
+    <!--/ Experiment. -->
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <!-- <div class="content has-text-centered">
+      <a class="icon-link" href="./static/videos/nerfies_paper.pdf">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
+        <i class="fab fa-github"></i>
+      </a>
+    </div> -->
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is based on the <a href="https://github.com/nerfies/nerfies.github.io">template</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+<!-- <script type="text/javascript">
+  MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+</script> -->
+<!-- <script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body);
+  });
+</script> -->
+</body>
+</html>
+
